@@ -1,0 +1,4 @@
+GamePadTransmitter	KEYWORD1
+begin               KEYWORD2
+update              KEYWORD2
+setRefeshInterval	KEYWORD2
