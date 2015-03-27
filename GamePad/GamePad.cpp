@@ -26,12 +26,16 @@ GamePad::GamePad(HardwareSerial* hardwareSerial) {
 void GamePad::init() {
     _deadzone = 6;
     _readyToRead = false;
+    _checksum = 0;
     for (int i = BUTTON_SELECT; i <= BUTTON_L2; i++) {
         _state[i] = 1; // button up
+        _buffer[i] = 1;
     }
     for (int i = BUTTON_JOY_RIGHT; i <= LEFT_AXIS_X; i++) {
         _state[i] = 127; // centered
+        _buffer[i] = 127;
     }
+    _buffer[CHECKSUM] = 0;
 }
 
 void GamePad::update() {    
@@ -48,14 +52,18 @@ void GamePad::update() {
             unsigned char b = this->read();
             if (b == 255) {
                 _offset = 0;
-                _readyToRead = false;  
+                _readyToRead = false;
             } else {
-                _state[_offset] = b;
+                _buffer[_offset] = b;
+                if (_offset < CHECKSUM) {
+                    _checksum += _buffer[_offset];
+                }
                 _offset++;
                 
-                if (_offset > LEFT_AXIS_X) {
+                if (_offset > CHECKSUM) {
                     _offset = 0;
-                    _readyToRead = false;  
+                    _readyToRead = false;
+                    this->commit();                    
                 }
             }
         }
@@ -78,6 +86,19 @@ boolean GamePad::available() {
         return _softSerial->available();
     }
     return false;
+}
+
+void GamePad::commit() {
+    unsigned char checkSumByte = (unsigned char)_checksum;
+    if (checkSumByte == 255) {
+        checkSumByte = 254;
+    }
+    if (checkSumByte == _buffer[CHECKSUM]) {
+        for (int i = 0; i < CHECKSUM; i++) {
+            _state[i] = _buffer[i];
+        }
+    }
+    _checksum = 0;
 }
 
 boolean GamePad::buttonValue(int index) {

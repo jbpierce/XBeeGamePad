@@ -33,15 +33,27 @@ void GamePadTransmitter::update() {
         // of the series
         Serial1.write(255);
         
+        unsigned int checksum = 0;
+        
         // write boolean values for pins 3 through 16
         for (int i = 3; i < 17; i++) {
-            Serial1.write(digitalRead(i));
+            int v = digitalRead(i);
+            Serial1.write(v);
+            checksum += v;
         }
         
         // write analog inputs
         for (int i = 0; i < 6; i++) {
-            Serial1.write(this->encodeAnalog(i));
+            int v = this->encodeAnalog(i);
+            Serial1.write(v);
+            checksum += v;
         }
+        
+        unsigned char checksumByte = (unsigned char)checksum;
+        if (checksumByte == 255) {
+            checksumByte = 254;
+        }
+        Serial1.write(checksumByte);
         
         _timer = millis();
     }    

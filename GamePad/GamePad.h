@@ -32,6 +32,8 @@
 #define RIGHT_AXIS_X        17
 #define LEFT_AXIS_Y         18
 #define LEFT_AXIS_X         19
+#define CHECKSUM            20
+#define BUFFER_SIZE         21
 
 // Represents the interface to the GamePad on the
 // receiving Arduino.
@@ -84,10 +86,13 @@ private:
     boolean available();
     boolean buttonValue(int index);
     int normalizeJoystick(int raw);
+    void commit();
     
     boolean _readyToRead;
     int _offset;
-    unsigned char _state[20];
+    unsigned int _checksum;
+    unsigned char _state[BUFFER_SIZE - 1];
+    unsigned char _buffer[BUFFER_SIZE];
     int _deadzone;
     
     SoftwareSerial* _softSerial;
